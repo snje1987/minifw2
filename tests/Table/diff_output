@@ -1,0 +1,119 @@
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Org\Snje\MinifwTest\Table\TableAdd table_with_one
+
++[0] `id` int(10) unsigned NOT NULL COMMENT 'ID'
++[2] `charfield` varchar(200) NOT NULL COMMENT 'A '' varchar field'
++[3] `textfield` text NOT NULL COMMENT 'A text field'
++[4] `addfield` text NOT NULL COMMENT 'A add field'
++[5] `intfield_def` int(11) NOT NULL DEFAULT '0' COMMENT 'A int field'
++[6] `charfield_def` varchar(200) NOT NULL DEFAULT '123''' COMMENT 'A varchar field'
++ PRIMARY KEY (`id`) COMMENT '主''键'
++ INDEX `intfield` (`intfield`,`charfield`)
++ UNIQUE `uniqueindex` (`intfield`)
++ INDEX `addfield` (`charfield`)
+-[0] `id` int(10) unsigned NOT NULL COMMENT 'ID'
++[0] `id` int(10) unsigned NOT NULL auto_increment COMMENT 'ID'
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Org\Snje\MinifwTest\Table\TableDel table_with_all
+
+- `id` int(10) unsigned NOT NULL auto_increment COMMENT 'ID'
+- `charfield` varchar(200) NOT NULL COMMENT 'A varchar field'
+- `textfield` text NOT NULL COMMENT 'A text field'
+- `intfield_def` int(11) NOT NULL DEFAULT '0' COMMENT 'A int field'
+- `charfield_def` varchar(200) NOT NULL DEFAULT '' COMMENT 'A varchar field'
+- PRIMARY KEY (`id`) COMMENT '主键'
+- UNIQUE `uniqueindex` (`intfield`)
+- INDEX `charfield` (`charfield`)
+- INDEX `intfield` (`intfield`,`charfield`)
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Org\Snje\MinifwTest\Table\TableChange table_with_all
+
+- Engine=InnoDB
++ Engine=MyISAM
+- Comment='Table To Create'
++ Comment='Table To Change'
+- Charset='utf8'
++ Charset='GBK'
++[1] `id2` int(10) unsigned NOT NULL COMMENT 'ID2'
+-[0] `id` int(10) unsigned NOT NULL auto_increment COMMENT 'ID'
++[0] `id` int(10) unsigned NOT NULL COMMENT 'ID'
+-[2] `intfield` int(11) NOT NULL COMMENT 'A int field'
++[2] `intfield` int(10) unsigned NOT NULL COMMENT 'A int field'
+-[3] `charfield` varchar(200) NOT NULL COMMENT 'A varchar field'
++[3] `charfield` varchar(100) NOT NULL DEFAULT '#' COMMENT 'A varchar field'
+-[4] `textfield` text NOT NULL COMMENT 'A text field'
++[4] `textfield` text NOT NULL COMMENT 'A text field change'
+-[5] `intfield_def` int(11) NOT NULL DEFAULT '0' COMMENT 'A int field'
++[5] `intfield_def` int(11) NOT NULL COMMENT 'A int field'
+-[6] `charfield_def` varchar(200) NOT NULL DEFAULT '' COMMENT 'A varchar field'
++[6] `charfield_def` int(11) NOT NULL DEFAULT '0' COMMENT 'A varchar field'
+- PRIMARY KEY (`id`) COMMENT '主键'
++ PRIMARY KEY (`intfield`)
+- INDEX `intfield` (`intfield`,`charfield`)
++ INDEX `intfield` (`charfield`)
+- INDEX `charfield` (`charfield`)
++ INDEX `charfield` (`intfield`,`charfield`)
+- UNIQUE `uniqueindex` (`intfield`)
++ INDEX `uniqueindex` (`intfield`)
+-[1] `id2` int(10) unsigned NOT NULL COMMENT 'ID2'
++[1] `id2` int(10) unsigned NOT NULL auto_increment COMMENT 'ID2'
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Org\Snje\MinifwTest\Table\TableMove table_with_all
+
+-[5] `charfield_def` varchar(200) NOT NULL DEFAULT '' COMMENT 'A varchar field'
++[0] `charfield_def` varchar(200) NOT NULL DEFAULT '' COMMENT 'A varchar field'
+-[5] `intfield_def` int(11) NOT NULL DEFAULT '0' COMMENT 'A int field'
++[1] `intfield_def` int(11) NOT NULL DEFAULT '0' COMMENT 'A int field'
+-[5] `textfield` text NOT NULL COMMENT 'A text field'
++[2] `textfield` text NOT NULL COMMENT 'A text field'
+-[5] `charfield` varchar(200) NOT NULL COMMENT 'A varchar field'
++[3] `charfield` varchar(200) NOT NULL COMMENT 'A varchar field'
+-[5] `intfield` int(11) NOT NULL COMMENT 'A int field'
++[4] `intfield` int(11) NOT NULL COMMENT 'A int field'
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Org\Snje\MinifwTest\Table\TableDel1 table_with_all
+
+- `intfield` int(11) NOT NULL COMMENT 'A int field'
+
+
+================================================================
+
+ALTER TABLE `table_with_one` ADD `id` int(10) unsigned NOT NULL COMMENT 'ID' first;
+ALTER TABLE `table_with_one` ADD `charfield` varchar(200) NOT NULL COMMENT 'A '' varchar field' after `intfield`;
+ALTER TABLE `table_with_one` ADD `textfield` text NOT NULL COMMENT 'A text field' after `charfield`;
+ALTER TABLE `table_with_one` ADD `addfield` text NOT NULL COMMENT 'A add field' after `textfield`;
+ALTER TABLE `table_with_one` ADD `intfield_def` int(11) NOT NULL DEFAULT '0' COMMENT 'A int field' after `addfield`;
+ALTER TABLE `table_with_one` ADD `charfield_def` varchar(200) NOT NULL DEFAULT '123''' COMMENT 'A varchar field' after `intfield_def`;
+ALTER TABLE `table_with_one` ADD PRIMARY KEY (`id`) COMMENT '主''键';
+ALTER TABLE `table_with_one` ADD INDEX `intfield` (`intfield`,`charfield`);
+ALTER TABLE `table_with_one` ADD UNIQUE `uniqueindex` (`intfield`);
+ALTER TABLE `table_with_one` ADD INDEX `addfield` (`charfield`);
+ALTER TABLE `table_with_one` CHANGE `id` `id` int(10) unsigned NOT NULL auto_increment COMMENT 'ID' first;
+ALTER TABLE `table_with_all` DROP `id`;
+ALTER TABLE `table_with_all` DROP `charfield`;
+ALTER TABLE `table_with_all` DROP `textfield`;
+ALTER TABLE `table_with_all` DROP `intfield_def`;
+ALTER TABLE `table_with_all` DROP `charfield_def`;
+ALTER TABLE `table_with_all` DROP INDEX `uniqueindex`;
+ALTER TABLE `table_with_all` DROP INDEX `intfield`;
+ALTER TABLE `table_with_all` ENGINE=MyISAM;
+ALTER TABLE `table_with_all` COMMENT='Table To Change';
+ALTER TABLE `table_with_all` DEFAULT CHARSET='GBK';
+ALTER TABLE `table_with_all` ADD `id2` int(10) unsigned NOT NULL COMMENT 'ID2' after `id`;
+ALTER TABLE `table_with_all` CHANGE `id` `id` int(10) unsigned NOT NULL COMMENT 'ID' first;
+ALTER TABLE `table_with_all` CHANGE `intfield` `intfield` int(10) unsigned NOT NULL COMMENT 'A int field' after `id2`;
+ALTER TABLE `table_with_all` CHANGE `charfield` `charfield` varchar(100) NOT NULL DEFAULT '#' COMMENT 'A varchar field' after `intfield`;
+ALTER TABLE `table_with_all` CHANGE `textfield` `textfield` text NOT NULL COMMENT 'A text field change' after `charfield`;
+ALTER TABLE `table_with_all` CHANGE `intfield_def` `intfield_def` int(11) NOT NULL COMMENT 'A int field' after `textfield`;
+ALTER TABLE `table_with_all` CHANGE `charfield_def` `charfield_def` int(11) NOT NULL DEFAULT '0' COMMENT 'A varchar field' after `intfield_def`;
+ALTER TABLE `table_with_all` DROP PRIMARY KEY, ADD PRIMARY KEY (`intfield`);
+ALTER TABLE `table_with_all` DROP INDEX `intfield`, ADD INDEX `intfield` (`charfield`);
+ALTER TABLE `table_with_all` DROP INDEX `charfield`, ADD INDEX `charfield` (`intfield`,`charfield`);
+ALTER TABLE `table_with_all` DROP INDEX `uniqueindex`, ADD INDEX `uniqueindex` (`intfield`);
+ALTER TABLE `table_with_all` CHANGE `id2` `id2` int(10) unsigned NOT NULL auto_increment COMMENT 'ID2' after `id`;
+ALTER TABLE `table_with_all` CHANGE `charfield_def` `charfield_def` varchar(200) NOT NULL DEFAULT '' COMMENT 'A varchar field' first;
+ALTER TABLE `table_with_all` CHANGE `intfield_def` `intfield_def` int(11) NOT NULL DEFAULT '0' COMMENT 'A int field' after `charfield_def`;
+ALTER TABLE `table_with_all` CHANGE `textfield` `textfield` text NOT NULL COMMENT 'A text field' after `intfield_def`;
+ALTER TABLE `table_with_all` CHANGE `charfield` `charfield` varchar(200) NOT NULL COMMENT 'A varchar field' after `textfield`;
+ALTER TABLE `table_with_all` CHANGE `intfield` `intfield` int(11) NOT NULL COMMENT 'A int field' after `charfield`;
+ALTER TABLE `table_with_all` DROP `intfield`;

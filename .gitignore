@@ -1,0 +1,13 @@
+/nbproject/private/
+/compiled/
+/theme/
+/www/
+/vendor/
+/ttfs/
+/html/
+/attach/
+/lib/
+/config.php
+/composer.lock
+/.htaccess
+*.swp

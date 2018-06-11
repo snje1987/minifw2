@@ -1,0 +1,13 @@
+<Files ~ "^.(htaccess|htpasswd)$">
+deny from all
+</Files>
+order deny,allow
+
+Options +FollowSymLinks
+RewriteEngine on
+
+ErrorDocument 404 /www/error/404.html
+
+RewriteCond %{REQUEST_URI} !^/www/.*$
+RewriteCond %{QUERY_STRING} (.*)
+RewriteRule ^(.*)$ /www/index.php
