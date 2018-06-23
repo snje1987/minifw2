@@ -62,6 +62,7 @@ class File {
     /**
      * 保存字符串到文件
      *
+     * @deprecated
      * @param string $str 要保存的字符串
      * @param string $group 分组
      * @param string $ext 扩展名
@@ -799,6 +800,22 @@ class File {
             $str = iconv($fsencoding, self::$encoding, $str);
         }
         return $str;
+    }
+
+    public static function appent_tail($path, $tail) {
+        if ($path == '') {
+            return '';
+        }
+        if ($tail == '') {
+            return $path;
+        }
+
+        $temp = pathinfo($path);
+        $name = $temp['filename'];
+        $path = $temp['dirname'];
+        $ext = $temp['extension'];
+
+        return $path . '/' . $name . $tail . '.' . $ext;
     }
 
 }

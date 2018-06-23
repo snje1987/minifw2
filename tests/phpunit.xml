@@ -24,6 +24,7 @@
                 <file>Resource/ResourceTest.php</file>
                 <file>DB/MysqliTest.php</file>
                 <file>Tpl/TplTest.php</file>
+                <file>Image/ImageTest.php</file>
             </testsuite>
         </testsuite>
     </testsuites>

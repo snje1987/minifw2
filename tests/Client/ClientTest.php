@@ -7,17 +7,6 @@ use Org\Snje\MinifwTest as Ts;
 
 class ClientTest extends Ts\TestCommon {
 
-    /**
-     * @coversNothing
-     */
-    public static function setUpBeforeClass() {
-        parent::setUpBeforeClass();
-        $base = str_replace('\\', '/', dirname(__FILE__));
-        $path = $base . '/tmp';
-        FW\File::clear_dir($path, true);
-        FW\File::delete($path, true);
-    }
-
     public function test_update_caroot() {
         $client = new FW\Client();
         $client->update_caroot();
