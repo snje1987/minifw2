@@ -51,6 +51,84 @@ class Image {
         return $this;
     }
 
+    public function round_corner($r, $percent = false, $level = 2, $bgcolor = null) {
+        if ($r <= 0) {
+            return;
+        }
+        if ($percent) {
+            if ($this->width >= $this->height) {
+                $r = $this->height * $r;
+            }
+            else {
+                $r = $this->width * $r;
+            }
+        }
+        $w = ceil($this->width / 2);
+        $h = ceil($this->height / 2);
+
+        if ($w > $r) {
+            $w = $r;
+        }
+        if ($h > $r) {
+            $h = $r;
+        }
+
+        if ($bgcolor == null) {
+            switch ($this->format) {
+                case self::FORMAT_GIF:
+                    $bgcolor = imagecolortransparent($this->image_obj);
+                    break;
+                case self::FORMAT_JPG:
+                    $bgcolor = imagecolorallocate($this->image_obj, 255, 255, 255);
+                    break;
+                case self::FORMAT_PNG:
+                    $bgcolor = imagecolorallocatealpha($this->image_obj, 0, 0, 0, 127);
+                    break;
+            }
+        }
+
+        $this->round_one_corner($r, $r, $r, 0, 0, $w, $h, $level, $bgcolor);
+        $this->round_one_corner($r, $this->width - $r, $r, $this->width - $w, 0, $w, $h, $level, $bgcolor);
+        $this->round_one_corner($r, $r, $this->height - $r, 0, $this->height - $h, $w, $h, $level, $bgcolor);
+        $this->round_one_corner($r, $this->width - $r, $this->height - $r, $this->width - $w, $this->height - $h, $w, $h, $level, $bgcolor);
+
+        return $this;
+    }
+
+    public function round_one_corner($r, $cx, $cy, $x, $y, $w, $h, $level, $bgcolor) {
+
+        $br = (($bgcolor >> 16) & 0xFF);
+        $bg = (($bgcolor >> 8) & 0xFF);
+        $bb = ($bgcolor & 0xFF);
+        $ba = (($bgcolor >> 24) & 0xFF);
+
+        for ($i = 0; $i < $w; $i++) {
+            for ($j = 0; $j < $h; $j++) {
+                $px = $x + $i;
+                $py = $y + $j;
+
+                $alpha = self::calc_alpha($r, $px - $cx, $py - $cy, $level);
+                if ($alpha <= 0) {
+                    continue;
+                }
+                elseif ($alpha >= 127) {
+                    imagesetpixel($this->image_obj, $px, $py, $bgcolor);
+                }
+                else {
+                    $color = imagecolorat($this->image_obj, $px, $py);
+                    $cr = (($color >> 16) & 0xFF) * $alpha + $br * (127 - $alpha);
+                    $cg = (($color >> 8) & 0xFF) * $alpha + $bg * (127 - $alpha);
+                    $cb = ($color & 0xFF) * $alpha + $bg + $bg * (127 - $alpha);
+                    $ca = (($color >> 24) & 0xFF) * $alpha + $ba * (127 - $alpha);
+
+                    $color = $ca << 24 | $cr << 16 | $cg << 8 | $cb;
+                    imagesetpixel($this->image_obj, $px, $py, $color);
+                }
+            }
+        }
+        return $this;
+    }
+
     public function save($dest, $quality = 75) {
         switch ($this->format) {
             case self::FORMAT_GIF:
@@ -60,6 +138,8 @@ class Image {
                 imagejpeg($this->image_obj, $dest, $quality);
                 break;
             case self::FORMAT_PNG:
+                //imagealphablending($image_obj, true);
+                //imagesavealpha($image_obj, true);
                 imagepng($this->image_obj, $dest);
                 break;
         }
@@ -77,6 +157,17 @@ class Image {
         $this->format = 0;
     }
 
+    public static function calc_alpha($r, $x, $y, $level) {
+        $r2 = $r * $r;
+        $offset = $x * $x + $y * $y - $r2;
+        if ($offset > 0) {
+            return 127;
+        }
+        else {
+            return 0;
+        }
+    }
+
     public static function load_image_obj($full, $format) {
         switch ($format) {
             case self::FORMAT_GIF:
@@ -87,7 +178,7 @@ class Image {
                 break;
             case self::FORMAT_PNG:
                 $image_obj = imagecreatefrompng($full);
-                imagealphablending($image_obj, true);
+                imagealphablending($image_obj, false);
                 imagesavealpha($image_obj, true);
                 break;
         }
@@ -125,7 +216,7 @@ class Image {
                 if ($bgcolor == null) {
                     $bgcolor = imagecolorallocate($image_obj, 0, 0, 0);
                 }
-                ImageColorTransparent($image_obj, $bgcolor);
+                imagecolortransparent($image_obj, $bgcolor);
                 break;
             case self::FORMAT_JPG:
                 $image_obj = imagecreatetruecolor($width, $height);
@@ -136,7 +227,7 @@ class Image {
                 break;
             case self::FORMAT_PNG:
                 $image_obj = imagecreatetruecolor($width, $height);
-                imagealphablending($image_obj, true);
+                imagealphablending($image_obj, false);
                 imagesavealpha($image_obj, true);
                 if ($bgcolor == null) {
                     $bgcolor = imagecolorallocatealpha($image_obj, 0, 0, 0, 127);
@@ -284,6 +375,27 @@ class Image {
                 $obj = new static();
                 $obj->init_image($info['format'], $max_width, $max_height)
                         ->merge(WEB_ROOT . $src, 0, 0, $src_x, $src_y, $max_width, $max_height, $src_w, $src_h)
+                        ->save(WEB_ROOT . $dest)
+                        ->destroy();
+            }
+            catch (\Exception $ex) {
+                copy(WEB_ROOT . $src, WEB_ROOT . $dest);
+            }
+        }
+
+        return $dest;
+    }
+
+    public static function image_round_corner($src, $tail, $r, $percent = false, $level = 2, $bgcolor = null) {
+        $dest = File::appent_tail($src, $tail);
+
+        if (!file_exists(WEB_ROOT . $dest)) {
+            try {
+                $info = self::get_image_info(WEB_ROOT . $src);
+
+                $obj = new static();
+                $obj->load_image(WEB_ROOT . $src)
+                        ->round_corner($r, $percent, $level, $bgcolor)
                         ->save(WEB_ROOT . $dest)
                         ->destroy();
             }

@@ -91,4 +91,18 @@ class ImageTest extends Ts\TestCommon {
         }
     }
 
+    public function test_image_round_corner() {
+        $path = '/tmp/image';
+
+        foreach (self::$img_list as $img) {
+            $old_info = getimagesize(WEB_ROOT . $path . '/' . $img);
+
+            FW\Image::image_round_corner($path . '/' . $img, '_r10', 0.5, true, 2);
+
+            $new_path = FW\File::appent_tail($path . '/' . $img, '_r10');
+            $new_info = getimagesize(WEB_ROOT . $new_path);
+            $this->assertEquals($old_info, $new_info);
+        }
+    }
+
 }
