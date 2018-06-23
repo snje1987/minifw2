@@ -10,7 +10,8 @@ $cfg['main']['db'] = 'Mysqli';
 $cfg['path'] = [
     'theme' => '/theme',
     'res' => '/www',
-    'compiled' => '/compiled',
+    'compiled' => '/tmp/compiled',
+    'caroot' => '/tmp/caroot.pem',
     'web_root' => dirname(__DIR__),
 ];
 

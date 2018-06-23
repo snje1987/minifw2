@@ -4,13 +4,63 @@ namespace Org\Snje\Minifw;
 
 class Client {
 
-    public $timeout = 30;
-    public $user_agent = null;
-    public $cookie = null;
-    public $referer = null;
-    public $header = null;
-    public $handle_cookie = true;
-    public $handle_referer = true;
+    const CAROOT_URL = 'https://curl.haxx.se/ca/cacert.pem';
+    const UPDATE_OFFSET = 604800; //7天
+
+    protected $timeout = 30;
+    protected $user_agent = 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/60.0';
+    protected $cookie = null;
+    protected $referer = null;
+    protected $header = null;
+    protected $handle_cookie = true;
+    protected $handle_referer = true;
+    protected $caroot = null;
+
+    public function __construct() {
+        $caroot = Config::get()->get_config('path', 'caroot', '');
+        if ($caroot == '') {
+            return;
+        }
+        $caroot = WEB_ROOT . $caroot;
+        if (file_exists($caroot)) {
+            $this->caroot = $caroot;
+        }
+    }
+
+    public function set_option($name, $value) {
+        switch ($name) {
+            case 'timeout':
+                $value = intval($value);
+                if ($value >= 0) {
+                    $this->timeout = $value;
+                }
+                else {
+                    throw new Exception('参数不合法');
+                }
+                break;
+            case 'user_agent':
+            case 'cookie':
+            case 'referer':
+            case 'header':
+                $value = strval($value);
+                if ($value !== '') {
+                    $this->$name = $value;
+                }
+                else {
+                    throw new Exception('参数不合法');
+                }
+                break;
+            case 'handle_cookie':
+            case 'handle_referer':
+                if ($value !== true) {
+                    $value = false;
+                }
+                $this->$name = $value;
+                break;
+            default :
+                throw new Exception('名称非法');
+        }
+    }
 
     /**
      * 执行post操作
@@ -32,16 +82,7 @@ class Client {
             curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
         }
 
-        $this->_parse_option($ch);
-
-        $content = curl_exec($ch);
-        curl_close($ch);
-
-        if ($this->handle_referer) {
-            $this->referer = $url;
-        }
-
-        return $this->_parse_result($content);
+        return $this->send_request($ch);
     }
 
     /**
@@ -66,16 +107,49 @@ class Client {
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
 
+        return $this->send_request($ch);
+    }
+
+    public function update_caroot() {
+        $caroot = Config::get()->get_config('path', 'caroot', '');
+        if ($caroot == '') {
+            throw new Exception('路径未设置');
+        }
+        $caroot = WEB_ROOT . $caroot;
+
+        $atime = 0;
+        if (file_exists($caroot)) {
+            $atime = fileatime($caroot);
+        }
+        if (time() - $atime > self::UPDATE_OFFSET) {
+            $ret = $this->get(self::CAROOT_URL);
+            File::put_content($caroot, $ret['content']);
+        }
+    }
+
+    protected function send_request($ch) {
         $this->_parse_option($ch);
 
         $content = curl_exec($ch);
+        $error = curl_errno($ch);
+
+        if ($error != 0) {
+            return [
+                'error' => $error,
+                'msg' => curl_error($ch),
+            ];
+        }
+
+        $result = curl_getinfo($ch);
+        $result['error'] = 0;
+
         curl_close($ch);
 
         if ($this->handle_referer) {
-            $this->referer = $url;
+            $this->referer = $result['url'];
         }
 
-        return $this->_parse_result($content);
+        return $this->_parse_result($result, $content);
     }
 
     protected function _parse_option($ch) {
@@ -84,8 +158,17 @@ class Client {
         curl_setopt($ch, CURLOPT_MAXREDIRS, 0);
         curl_setopt($ch, CURLOPT_TIMEOUT, $this->timeout);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // https请求 不验证证书和hosts
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+
+        if ($this->caroot !== null) {
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 1);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+            curl_setopt($ch, CURLOPT_CAINFO, $this->caroot);
+        }
+        else {
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        }
+
         if ($this->cookie !== null) {
             curl_setopt($ch, CURLOPT_COOKIE, $this->cookie);
         }
@@ -100,14 +183,7 @@ class Client {
         }
     }
 
-    protected function _parse_result($content) {
-        $result = [];
-        if (preg_match('/Location:(.*)\r\n/iU', $content, $matches)) {
-            $result['location'] = trim($matches[1]);
-        }
-        else {
-            $result['location'] = '';
-        }
+    protected function _parse_result($result, $content) {
 
         if (preg_match_all('/Set-Cookie:(.*);/iU', $content, $matches)) {
             $result['cookie'] = substr(implode(';', $matches[1]), 1);
@@ -134,6 +210,8 @@ class Client {
                 $this->cookie = $this->cookie . ';' . $result['cookie'];
             }
         }
+
+        return $result;
     }
 
 }

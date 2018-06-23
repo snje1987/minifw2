@@ -12,6 +12,7 @@
         <testsuite name="all">
             <testsuite name="money">
                 <file>Config/ConfigTest.php</file>
+                <file>Client/ClientTest.php</file>
                 <file>Text/TextTest.php</file>
                 <file>Table/CreateTest.php</file>
                 <file>Table/GetTest.php</file>

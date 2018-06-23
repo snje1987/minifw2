@@ -3,8 +3,9 @@
 $cfg['path'] = [
     'theme' => '/theme', //template path
     'res' => '/www', //resource path
-    'compiled' => '/compiled', //compiled template
+    'compiled' => '/tmp/compiled', //compiled template
     'web_root' => isset($_SERVER['DOCUMENT_ROOT']) ? $_SERVER['DOCUMENT_ROOT'] : '', //web site's root
+    'caroot' => '/data/caroot.pem',
 ];
 
 $cfg['fonts'] = [
