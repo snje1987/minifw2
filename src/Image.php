@@ -51,17 +51,9 @@ class Image {
         return $this;
     }
 
-    public function round_corner($r, $percent = false, $level = 2, $bgcolor = null) {
+    public function round_corner($r, $level = 2, $bgcolor = null) {
         if ($r <= 0) {
             return;
-        }
-        if ($percent) {
-            if ($this->width >= $this->height) {
-                $r = $this->height * $r;
-            }
-            else {
-                $r = $this->width * $r;
-            }
         }
         $w = ceil($this->width / 2);
         $h = ceil($this->height / 2);
@@ -71,6 +63,10 @@ class Image {
         }
         if ($h > $r) {
             $h = $r;
+        }
+
+        if ($this->format == self::FORMAT_GIF) {
+            $level = 0; //gif图片不支持抗锯齿
         }
 
         if ($bgcolor == null) {
@@ -96,7 +92,6 @@ class Image {
     }
 
     public function round_one_corner($r, $cx, $cy, $x, $y, $w, $h, $level, $bgcolor) {
-
         $br = (($bgcolor >> 16) & 0xFF);
         $bg = (($bgcolor >> 8) & 0xFF);
         $bb = ($bgcolor & 0xFF);
@@ -116,12 +111,14 @@ class Image {
                 }
                 else {
                     $color = imagecolorat($this->image_obj, $px, $py);
-                    $cr = (($color >> 16) & 0xFF) * $alpha + $br * (127 - $alpha);
-                    $cg = (($color >> 8) & 0xFF) * $alpha + $bg * (127 - $alpha);
-                    $cb = ($color & 0xFF) * $alpha + $bg + $bg * (127 - $alpha);
-                    $ca = (($color >> 24) & 0xFF) * $alpha + $ba * (127 - $alpha);
+                    $alpah_c = 127 - $alpha;
 
-                    $color = $ca << 24 | $cr << 16 | $cg << 8 | $cb;
+                    $cr = (($color >> 16) & 0xFF) * $alpah_c + $br * $alpha;
+                    $cg = (($color >> 8) & 0xFF) * $alpah_c + $bg * $alpha;
+                    $cb = ($color & 0xFF) * $alpah_c + $bg + $bb * $alpha;
+                    $ca = (($color >> 24) & 0xFF) * $alpah_c + $ba * $alpha;
+
+                    $color = ($ca / 127) << 24 | ($cr / 127) << 16 | ($cg / 127) << 8 | ($cb / 127);
                     imagesetpixel($this->image_obj, $px, $py, $color);
                 }
             }
@@ -160,12 +157,45 @@ class Image {
     public static function calc_alpha($r, $x, $y, $level) {
         $r2 = $r * $r;
         $offset = $x * $x + $y * $y - $r2;
-        if ($offset > 0) {
+        if ($level <= 0) {
+            if ($offset > 0) {
+                return 127;
+            }
+            else {
+                return 0;
+            }
+        }
+
+        $offset -= 0.5;
+        $limit = 1.42 * $r;
+        if ($offset >= $limit) {
             return 127;
         }
-        else {
+        elseif ($offset < -1 * $limit) {
             return 0;
         }
+
+        if ($level > 4) {
+            $level = 4;
+        }
+
+        $len = 1 << $level;
+        $step = 1 / $len;
+        $bx = $x - 0.5 + $step / 2;
+        $by = $y - 0.5 + $step / 2;
+        $count = 0;
+
+        for ($i = 0; $i < $len; $i++) {
+            for ($j = 0; $j < $len; $j++) {
+                $sx = $bx + $step * $i;
+                $sy = $by + $step * $j;
+                if ($sx * $sx + $sy * $sy - $r2 > 0) {
+                    $count ++;
+                }
+            }
+        }
+
+        return intval(($count / $len / $len) * 127);
     }
 
     public static function load_image_obj($full, $format) {
@@ -287,7 +317,6 @@ class Image {
                 $info = self::get_image_info(WEB_ROOT . $src);
 
                 list($dst_w, $dst_h) = self::calc_dst_size($info['width'], $info['height'], $max_width, $max_height);
-                echo $dst_w . ' ' . $dst_h . "\n";
 
                 $obj = new static();
                 $obj->init_image($info['format'], $dst_w, $dst_h)
@@ -386,7 +415,7 @@ class Image {
         return $dest;
     }
 
-    public static function image_round_corner($src, $tail, $r, $percent = false, $level = 2, $bgcolor = null) {
+    public static function image_round_corner($src, $tail, $r, $level = 2, $bgcolor = null) {
         $dest = File::appent_tail($src, $tail);
 
         if (!file_exists(WEB_ROOT . $dest)) {
@@ -395,7 +424,7 @@ class Image {
 
                 $obj = new static();
                 $obj->load_image(WEB_ROOT . $src)
-                        ->round_corner($r, $percent, $level, $bgcolor)
+                        ->round_corner($r, $level, $bgcolor)
                         ->save(WEB_ROOT . $dest)
                         ->destroy();
             }
