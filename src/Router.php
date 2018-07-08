@@ -29,7 +29,7 @@ class Router {
             $matches[4] = '';
         }
 
-        return [$dir, $fname, $args, $matches[4]];
+        return [$dir, $fname, $args];
     }
 
     /**
@@ -39,23 +39,7 @@ class Router {
      * @param string $default_controler 默认的处理器
      */
     public function multi_layer_route($url, $namespace, $default_controler) {
-        list($classname, $funcname, $args, $nouse) = self::multi_layer_info($url);
-        $classname = str_replace('/', '\\', $classname);
-        if ($classname == '') {
-            $classname = '\\' . $default_controler;
-        }
-        if ($classname == '') {
-            throw new Exception('未指定Controler.');
-        }
-        $classname = $namespace . ucwords($classname, '\\');
-        if (!class_exists($classname)) {
-            throw new Exception('Controler ' . $classname . '不存在.');
-        }
-        $controler = new $classname();
-        if (!$controler instanceof Controler) {
-            throw new Exception($classname . '不是一个Controler对象.');
-        }
-        $controler->dispatch($funcname, $args);
+        $this->route($url, $namespace, $default_controler, __CLASS__ . '::multi_layer_info');
         return;
     }
 
@@ -85,24 +69,42 @@ class Router {
      * @param string $default_controler 默认的处理器
      */
     public function single_layer_route($url, $namespace, $default_controler) {
-        list($classname, $funcname, $args) = self::single_layer_info($url);
-        $classname = str_replace('/', '\\', $classname);
-        if ($classname == '') {
-            $classname = '\\' . $default_controler;
-        }
-        if ($classname == '') {
-            throw new Exception('未指定Controler.');
-        }
-        $classname = $namespace . ucwords($classname, '\\');
-        if (!class_exists($classname)) {
-            throw new Exception('Controler ' . $classname . '不存在.');
-        }
-        $controler = new $classname();
-        if (!$controler instanceof Controler) {
-            throw new Exception($classname . '不是一个Controler对象.');
-        }
-        $controler->dispatch($funcname, $args);
+        $this->route($url, $namespace, $default_controler, __CLASS__ . '::single_layer_info');
         return;
+    }
+
+    protected function route($url, $namespace, $default_controler, $info_func) {
+        try {
+            list($classname, $funcname, $args) = call_user_func($info_func, $url);
+
+            $classname = str_replace('/', '\\', $classname);
+            if ($classname == '') {
+                $classname = '\\' . $default_controler;
+            }
+            if ($classname == '') {
+                throw new Exception('未指定Controler.');
+            }
+            $classname = $namespace . ucwords($classname, '\\');
+            if (!class_exists($classname)) {
+                throw new Exception('Controler ' . $classname . '不存在.');
+            }
+            $controler = new $classname();
+            if (!$controler instanceof Controler) {
+                throw new Exception($classname . '不是一个Controler对象.');
+            }
+            $controler->dispatch($funcname, $args);
+        }
+        catch (\Exception $ex) {
+            $classname = $namespace . ucwords('\\' . $default_controler, '\\');
+            if (!class_exists($classname)) {
+                throw new Exception('Controler ' . $classname . '不存在.');
+            }
+            $controler = new $classname();
+            if (!$controler instanceof Controler) {
+                throw new Exception($classname . '不是一个Controler对象.');
+            }
+            $controler->show_404();
+        }
     }
 
     public function resource_route($url, $base) {
