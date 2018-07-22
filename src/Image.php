@@ -13,6 +13,8 @@ class Image {
     const CUT_BTM_RIGHT = 4;
     const CUT_CENTER = 5;
 
+    public static $default_quality = 90;
+    public static $default_level = 2;
     protected $image_obj = null;
     protected $width = 0;
     protected $height = 0;
@@ -43,6 +45,27 @@ class Image {
         return $this;
     }
 
+    public function rotate($degree) {
+        if ($degree % 90 !== 0) {
+            throw new Exception('不支持该操作');
+        }
+        $degree = $degree % 360;
+        if ($degree == 0) {
+            return;
+        }
+        $new_obj = imagerotate($this->image_obj, $degree, 0);
+        imagedestroy($this->image_obj);
+        $this->image_obj = $new_obj;
+
+        if ($degree % 180 !== 0) {
+            $tmp = $this->height;
+            $this->width = $this->height;
+            $this->height = $tmp;
+        }
+
+        return $this;
+    }
+
     public function merge($full, $dst_x, $dst_y, $src_x, $src_y, $dst_w, $dst_h, $src_w, $src_h) {
         $info = self::get_image_info($full);
         $src_obj = self::load_image_obj($full, $info['format']);
@@ -51,7 +74,21 @@ class Image {
         return $this;
     }
 
-    public function round_corner($r, $level = 2, $bgcolor = null) {
+    public function transform($new_w, $new_h, $bgcolor, $dst_x, $dst_y, $src_x, $src_y, $dst_w, $dst_h, $src_w, $src_h) {
+        $src_obj = $this->image_obj;
+        $this->image_obj = self::get_new_image($this->format, $new_w, $new_h, $bgcolor);
+        $this->width = $new_w;
+        $this->height = $new_h;
+
+        imagecopyresampled($this->image_obj, $src_obj, $dst_x, $dst_y, $src_x, $src_y, $dst_w, $dst_h, $src_w, $src_h);
+        imagedestroy($src_obj);
+        return $this;
+    }
+
+    public function round_corner($r, $level = -1, $bgcolor = null) {
+        if ($level < 0) {
+            $level = self::$default_level;
+        }
         if ($r <= 0) {
             return;
         }
@@ -126,7 +163,10 @@ class Image {
         return $this;
     }
 
-    public function save($dest, $quality = 75) {
+    public function save($dest, $quality = -1) {
+        if ($quality < 0) {
+            $quality = self::$default_quality;
+        }
         switch ($this->format) {
             case self::FORMAT_GIF:
                 imagegif($this->image_obj, $dest);
@@ -152,6 +192,18 @@ class Image {
         $this->width = 0;
         $this->height = 0;
         $this->format = 0;
+    }
+
+    public function get_format() {
+        return $this->format;
+    }
+
+    public function get_size() {
+        return [$this->width, $this->height];
+    }
+
+    public function get_obj() {
+        return $this->image_obj;
     }
 
     public static function calc_alpha($r, $x, $y, $level) {
@@ -319,8 +371,8 @@ class Image {
                 list($dst_w, $dst_h) = self::calc_dst_size($info['width'], $info['height'], $max_width, $max_height);
 
                 $obj = new static();
-                $obj->init_image($info['format'], $dst_w, $dst_h)
-                        ->merge(WEB_ROOT . $src, 0, 0, 0, 0, $dst_w, $dst_h, $info['width'], $info['height'])
+                $obj->load_image(WEB_ROOT . $src)
+                        ->transform($dst_w, $dst_h, NULL, 0, 0, 0, 0, $dst_w, $dst_h, $info['width'], $info['height'])
                         ->save(WEB_ROOT . $dest)
                         ->destroy();
             }
@@ -356,8 +408,8 @@ class Image {
                 }
 
                 $obj = new static();
-                $obj->init_image($info['format'], $max_width, $max_height, $bgcolor)
-                        ->merge(WEB_ROOT . $src, $dst_x, $dst_y, 0, 0, $dst_w, $dst_h, $info['width'], $info['height'])
+                $obj->load_image(WEB_ROOT . $src)
+                        ->transform($max_width, $max_height, $bgcolor, $dst_x, $dst_y, 0, 0, $dst_w, $dst_h, $info['width'], $info['height'])
                         ->save(WEB_ROOT . $dest)
                         ->destroy();
             }
@@ -402,8 +454,8 @@ class Image {
                 }
 
                 $obj = new static();
-                $obj->init_image($info['format'], $max_width, $max_height)
-                        ->merge(WEB_ROOT . $src, 0, 0, $src_x, $src_y, $max_width, $max_height, $src_w, $src_h)
+                $obj->load_image(WEB_ROOT . $src)
+                        ->transform($max_width, $max_height, NULL, 0, 0, $src_x, $src_y, $max_width, $max_height, $src_w, $src_h)
                         ->save(WEB_ROOT . $dest)
                         ->destroy();
             }
