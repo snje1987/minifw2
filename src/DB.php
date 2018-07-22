@@ -61,12 +61,17 @@ abstract class DB implements TableAnalysis {
         return $data;
     }
 
-    public function get_query($sql, $var = []) {
+    public function get_query($sql, $var = [], $hash = false) {
         $res = $this->query($sql, $var);
         if ($res === false) {
             return false;
         }
-        $data = $this->fetch_all($res);
+        if ($hash) {
+            $data = $this->fetch_hash($res);
+        }
+        else {
+            $data = $this->fetch_all($res);
+        }
         $this->free($res);
         return $data;
     }

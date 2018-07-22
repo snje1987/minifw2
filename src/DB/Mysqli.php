@@ -156,12 +156,14 @@ class Mysqli extends FW\DB {
         if ($count <= 1) {
             return [];
         }
-        for ($data = []; $tmp = $res->fetch_array(MYSQLI_NUM);) {
+        $key = $cols[0]->name;
+        $value = $cols[1]->name;
+        for ($data = []; $tmp = $res->fetch_array(MYSQLI_ASSOC);) {
             if ($count == 2) {
-                $data[$tmp[0]] = $tmp[1];
+                $data[$tmp[$key]] = $tmp[$value];
             }
             else {
-                $data[$tmp[0]] = $tmp;
+                $data[$tmp[$key]] = $tmp;
             }
         }
         return $data;
