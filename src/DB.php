@@ -312,9 +312,15 @@ abstract class DB implements TableAnalysis {
                 else {
                     $first = false;
                 }
-                $str .= ' (' . ($tbname == '' ? '' : '`' . $tbname . '`.') . '`' . $key . '` in (';
-                $str .= 'select `' . ($this->parse_str($value[2])) . '` from `' . ($this->parse_str($value[1])) . '`' . $this->_parse_condition($value[3], $this->parse_str($value[1]));
-                $str .= '))';
+
+                if (is_array($value[1])) {
+                    $str .= ' (' . ($tbname == '' ? '' : '`' . $tbname . '`.') . '`' . $key . '` in (\'' . implode('\',\'', $value[1]) . '\'))';
+                }
+                else {
+                    $str .= ' (' . ($tbname == '' ? '' : '`' . $tbname . '`.') . '`' . $key . '` in (';
+                    $str .= 'select `' . ($this->parse_str($value[2])) . '` from `' . ($this->parse_str($value[1])) . '`' . $this->_parse_condition($value[3], $this->parse_str($value[1]));
+                    $str .= '))';
+                }
                 break;
             case 'or':
                 $tmp_first = true;
