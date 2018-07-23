@@ -51,7 +51,7 @@ class Image {
         }
         $degree = $degree % 360;
         if ($degree == 0) {
-            return;
+            return $this;
         }
         $new_obj = imagerotate($this->image_obj, $degree, 0);
         imagedestroy($this->image_obj);
@@ -90,7 +90,7 @@ class Image {
             $level = self::$default_level;
         }
         if ($r <= 0) {
-            return;
+            return $this;
         }
         $w = ceil($this->width / 2);
         $h = ceil($this->height / 2);
