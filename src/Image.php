@@ -59,8 +59,8 @@ class Image {
 
         if ($degree % 180 !== 0) {
             $tmp = $this->height;
-            $this->width = $this->height;
-            $this->height = $tmp;
+            $this->height = $this->width;
+            $this->width = $tmp;
         }
 
         return $this;
