@@ -122,8 +122,16 @@ class Client {
             $atime = fileatime($caroot);
         }
         if (time() - $atime > self::UPDATE_OFFSET) {
+            $otime_out = $this->timeout;
+            $this->timeout = 60;
             $ret = $this->get(self::CAROOT_URL);
-            File::put_content($caroot, $ret['content']);
+            if ($ret['error'] === 0) {
+                File::put_content($caroot, $ret['content']);
+            }
+            else {
+                echo $ret['msg'];
+            }
+            $this->timeout = $otime_out;
         }
     }
 
