@@ -283,14 +283,14 @@ class Mysqli extends FW\DB {
         }
         $create_sql = $data[0]['Create Table'];
         $matches = [];
-        if (preg_match('/ENGINE=(\w+)( AUTO_INCREMENT=\d+)? DEFAULT CHARSET=(\w+)( COMMENT=\'([^\']*)\')?$/', $create_sql, $matches)) {
+        if (preg_match('/ENGINE=(\w+)( AUTO_INCREMENT=\d+)? DEFAULT CHARSET=(\w+)( ROW_FORMAT=\w+)?( COMMENT=\'([^\']*)\')?$/', $create_sql, $matches)) {
             $ret = [
                 'engine' => $matches[1],
                 'charset' => $matches[3],
                 'comment' => '',
             ];
-            if (isset($matches[5]) && $matches[5] != '') {
-                $ret['comment'] = $matches[5];
+            if (isset($matches[6]) && $matches[6] != '') {
+                $ret['comment'] = $matches[6];
             }
             return $ret;
         }
