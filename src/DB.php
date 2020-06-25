@@ -346,14 +346,23 @@ abstract class DB implements TableAnalysis {
         }
         $str = '';
         $first = true;
+        $order = '';
+        $group = '';
+        $limit = '';
         foreach ($condition as $key => $value) {
             if ($key == 'order') {
-                $str .= ' order by ' . $value;
+                $order = ' order by ' . $value;
             }
             elseif ($key == 'limit') {
-                $str .= ' limit ' . $value;
+                $limit = ' limit ' . $value;
+            }
+            elseif ($key == '_group') {
+                $group = ' group by ' . $value;
             }
             else {
+                if (preg_match('/^`(.+)`$/', $key, $matches)) {
+                    $key = $matches[1];
+                }
                 if (is_array($value)) {
                     if (is_array($value[0])) {
                         foreach ($value as $one) {
@@ -378,6 +387,7 @@ abstract class DB implements TableAnalysis {
                 }
             }
         }
+        $str .= $group . $order . $limit;
         if ($first == false) {
             $str = ' where ' . $str;
         }

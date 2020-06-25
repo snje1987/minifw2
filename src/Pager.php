@@ -58,16 +58,34 @@ class Pager {
         }
     }
 
-    public function get_page($instance, $condition = [], $field = []) {
+    public function get_page($instance, $condition = [], $field = [], $order = '', $group = '') {
         $this->item_count = $instance->count($condition);
         $this->cal();
         if (is_array($condition)) {
+
+            if ($group != '') {
+                $condition['_group'] = $group;
+            }
+
+            if ($order != '') {
+                $condition['order'] = $order;
+            }
+
             $condition['limit'] = $this->start . ',' . $this->item_per_page;
             return $instance->gets_by_condition($condition, $field);
         }
         else {
+            if ($group != '') {
+                $condition .= ' group by ' . $group;
+            }
+
+            if ($order != '') {
+                $condition .= ' order by ' . $order;
+            }
+
             $condition .= ' limit ' . $this->start . ',' . $this->item_per_page;
             $sql = 'select ' . $field . ' from ' . $condition;
+
             return $instance->gets_by_query($sql);
         }
     }
