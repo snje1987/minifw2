@@ -413,7 +413,7 @@ class File {
                 if ($file === '.' || $file === '..') {
                     continue;
                 }
-                if ($file{0} == '.' && !$hidden) {
+                if ($file[0] == '.' && !$hidden) {
                     continue;
                 }
                 $from = $src . $file;
@@ -614,7 +614,7 @@ class File {
                     if ($file === '.' || $file === '..') {
                         continue;
                     }
-                    if ($file{0} == '.' && !$hidden) {
+                    if ($file[0] == '.' && !$hidden) {
                         continue;
                     }
                     $filename = self::conv_from($file, $fsencoding);

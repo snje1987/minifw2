@@ -72,7 +72,7 @@ class Controler {
 
     public static function host() {
         $url = 'http';
-        if ($_SERVER['HTTPS'] == 'on') {
+        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') {
             $url .= 's';
         }
         $url .= '://' . $_SERVER['HTTP_HOST'];
